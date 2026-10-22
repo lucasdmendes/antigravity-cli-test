@@ -13,34 +13,34 @@ The story is segmented into calibrated ~500-character narrative stages. At each 
 ### 1. System Block Diagram
 
 ```mermaid
-graph TD
-    subgraph DataLayer["1. Data & Types Layer"]
-        ST[storyData.ts<br/>• 5 calibrated ~500-char parts<br/>• 3 choices per stage<br/>• Fatal consequences]
-        TY[types/story.ts<br/>• StoryPart & StoryChoice<br/>• GameStatus & TerminalTheme]
-        TH[utils/theme.ts<br/>• Phosphor Green / Amber / Slate]
+flowchart TD
+    subgraph DataLayer["1. Data and Types Layer"]
+        ST["storyData.ts (5 calibrated ~500-char stages, choices, consequences)"]
+        TY["types/story.ts (StoryPart, StoryChoice, GameStatus, TerminalTheme)"]
+        TH["utils/theme.ts (Phosphor Green, Amber, Slate palettes)"]
     end
 
-    subgraph HookLayer["2. Logic & State Engine Layer"]
-        SE[useStoryEngine.ts<br/>• currentPartIndex<br/>• selectChoice()<br/>• restartGame()<br/>• attempts & telemetry]
-        TW[useTypewriter.ts<br/>• Cadence streaming<br/>• skipTyping() instant-reveal<br/>• Progress tracking]
+    subgraph HookLayer["2. Logic and State Engine Layer"]
+        SE["useStoryEngine.ts (State machine, navigation, restart from page 1)"]
+        TW["useTypewriter.ts (Cadence streaming, skipTyping instant reveal)"]
     end
 
     subgraph AppShell["3. Application Orchestrator"]
-        APP[App.tsx<br/>• Global Keyboard Event Bus<br/>• Theme & CRT Scanline state<br/>• Dynamic screen routing]
+        APP["App.tsx (Global keyboard event bus, theme and CRT scanline state)"]
     end
 
     subgraph ViewLayer["4. Component Presentation Layer"]
         direction TB
-        HDR[TerminalHeader.tsx<br/>Status, Cycle, Theme & CRT Controls]
-        PRG[TerminalProgress.tsx<br/>Segmented Block Meter & Sector Telemetry]
+        HDR["TerminalHeader.tsx (Status, cycle counter, theme and CRT toggles)"]
+        PRG["TerminalProgress.tsx (Segmented memory block meter)"]
         
         subgraph ActiveScreens["Dynamic Viewport Routing"]
-            STG[StoryPassage.tsx + ChoicePrompt.tsx<br/>status === 'PLAYING']
-            GO[GameOverView.tsx<br/>status === 'GAME_OVER']
-            VIC[VictoryView.tsx<br/>status === 'VICTORY']
+            STG["StoryPassage.tsx and ChoicePrompt.tsx (Playing mode)"]
+            GO["GameOverView.tsx (Game Over alert and restart button)"]
+            VIC["VictoryView.tsx (Extraction accomplished summary)"]
         end
         
-        FTR[Footer<br/>Shortcuts & Specifications]
+        FTR["Footer (Keyboard shortcuts and specifications telemetry)"]
     end
 
     DataLayer --> HookLayer
@@ -54,7 +54,7 @@ graph TD
 
 ```mermaid
 stateDiagram-v2
-    [*] --> Stage1: Initialize (Cycle #1)
+    [*] --> Stage1: Initialize Cycle 1
     
     state "Stage 1: Drowned Airlock (~504 chars)" as Stage1
     state "Stage 2: Flooded Atrium (~512 chars)" as Stage2
@@ -79,16 +79,16 @@ stateDiagram-v2
 
     state GameOver {
         [*] --> DisplayFatalConsequence
-        DisplayFatalConsequence --> RestartRequested: [R] or Click Restart
+        DisplayFatalConsequence --> RestartRequested: Press R or Click Restart
     }
 
     state Victory {
         [*] --> DisplayMissionReport
-        DisplayMissionReport --> ResetAll: [Enter] / Play Again
+        DisplayMissionReport --> ResetAll: Press Enter or Play Again
     }
 
-    RestartRequested --> Stage1: Reset to Index 0 (Cycle + 1)
-    ResetAll --> Stage1: Full Reset (Cycle #1)
+    RestartRequested --> Stage1: Reset to Index 0 and Increment Cycle
+    ResetAll --> Stage1: Full Reset to Cycle 1
 ```
 
 ---
@@ -102,35 +102,35 @@ sequenceDiagram
     participant App as App.tsx
     participant Engine as useStoryEngine
     participant Typewriter as useTypewriter
-    participant UI as StoryPassage / ChoicePrompt
+    participant UI as "StoryPassage / ChoicePrompt"
     participant GameOver as GameOverView
 
     Player->>App: Mounts Application
-    App->>Engine: Initialize (partIndex: 0, status: 'PLAYING')
-    App->>Typewriter: Load text (length ~500 chars)
+    App->>Engine: Initialize (partIndex: 0, status: PLAYING)
+    App->>Typewriter: Load text (~500 chars)
     Typewriter-->>UI: Stream characters with blinking cursor
     
     alt Player skips animation
-        Player->>UI: Press [SPACE] or Click Text
+        Player->>UI: Press SPACE or Click Text
         UI->>Typewriter: skipTyping()
         Typewriter-->>UI: Instantly render full passage
     end
 
     alt Player selects correct choice
-        Player->>UI: Press [1, 2, or 3] or Click Choice
+        Player->>UI: Press 1, 2, or 3 or Click Choice
         UI->>Engine: selectChoice(choice)
-        Engine->>Engine: isCorrect === true
+        Engine->>Engine: isCorrect is true
         Engine-->>App: Advance partIndex + 1
         App->>Typewriter: Load new passage text
     else Player selects wrong choice
-        Player->>UI: Press [1, 2, or 3] or Click Choice
+        Player->>UI: Press 1, 2, or 3 or Click Choice
         UI->>Engine: selectChoice(choice)
-        Engine->>Engine: isCorrect === false
-        Engine-->>App: status: 'GAME_OVER'
+        Engine->>Engine: isCorrect is false
+        Engine-->>App: status: GAME_OVER
         App-->>GameOver: Render Fatal Consequence Modal
-        Player->>GameOver: Press [R] / Click "Restart from First Page"
+        Player->>GameOver: Press R or Click Restart
         GameOver->>Engine: restartGame()
-        Engine-->>App: Reset partIndex: 0, cycle: attempts + 1
+        Engine-->>App: Reset partIndex: 0, increment attempts
         App->>Typewriter: Load Stage 1 text
     end
 ```
