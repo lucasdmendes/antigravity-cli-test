@@ -157,9 +157,14 @@ src/
 │   └── VictoryView.tsx       # Mission Accomplished screen with extraction statistics
 ├── utils/
 │   └── theme.ts              # Terminal themes: Phosphor Green, Amber CRT, Cyber Slate
+├── test/
+│   └── setup.ts              # Vitest + Jest-DOM setup
 ├── __tests__/
 │   ├── storyData.test.ts     # Data integrity tests (~500 chars, 3 choices, 1 valid / 2 fatal)
-│   └── useStoryEngine.test.ts# Logic test suite (navigation, failures, first-page reboot)
+│   ├── useStoryEngine.test.ts# Logic test suite (navigation, failures, first-page reboot)
+│   ├── useTypewriter.test.ts # Fake timer hook tests (streaming, cadence, instant skip)
+│   ├── StoryComponents.test.tsx # Component unit tests (Passage, Choice, GameOver, Victory, Header, Progress)
+│   └── App.test.tsx          # Full integration suite (E2E story loop, keyboard hotkeys, themes)
 ├── App.tsx                   # Master keyboard listener and screen router
 ├── index.css                 # Base styles and CRT scanline overlay rules
 └── main.tsx                  # React DOM entry point
@@ -178,6 +183,25 @@ src/
 
 ---
 
+## 🧪 Test Suite (30 Passing Tests)
+
+The project includes an automated test suite powered by **Vitest**, **React Testing Library**, and **jest-dom**:
+
+| Test File | Scope | Key Assertions |
+| :--- | :--- | :--- |
+| [`storyData.test.ts`](src/__tests__/storyData.test.ts) | Data Integrity | Enforces ~500 chars per stage (480–520), exactly 3 choices, 1 valid / 2 fatal, non-empty consequences |
+| [`useStoryEngine.test.ts`](src/__tests__/useStoryEngine.test.ts) | State Machine | Progression, game-over trigger, attempts counter, first-page reset, victory condition |
+| [`useTypewriter.test.ts`](src/__tests__/useTypewriter.test.ts) | Hook & Timers | Character-by-character cadence via `vi.useFakeTimers()`, instant skip, reset on passage change |
+| [`StoryComponents.test.tsx`](src/__tests__/StoryComponents.test.tsx) | Component Units | Telemetry badges, cursor presence, choice payloads, fatal alerts, flawless/survivor badges, theme toggles |
+| [`App.test.tsx`](src/__tests__/App.test.tsx) | Full Integration | End-to-end stage navigation, failure reboot cycle, keyboard listeners (`1, 2, 3, Space, R`), CRT scanlines |
+
+Run the test suite:
+```bash
+npm test
+```
+
+---
+
 ## 🚀 Development & Testing Commands
 
 ```bash
@@ -187,7 +211,7 @@ npm install
 # Run development server
 npm run dev
 
-# Run Vitest automated test suite (11 test cases)
+# Run full Vitest test suite (30 test cases)
 npm test
 
 # Build for production
